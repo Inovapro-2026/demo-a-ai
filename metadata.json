@@ -1,0 +1,6 @@
+{
+  "name": "Dois Amores Açaíteria e Sorveteria",
+  "description": "Plataforma completa de e-commerce, delivery PWA e painel administrativo para a Dois Amores Açaíteria e Sorveteria.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

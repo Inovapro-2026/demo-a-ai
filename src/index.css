@@ -1,0 +1,229 @@
+@import "tailwindcss";
+
+:root {
+  --brand-primary: #4A123F;
+  --brand-secondary: #781B68;
+  --brand-deep: #310D2B;
+  --brand-accent: #E6AE52;
+  --brand-cream: #FFF5EB;
+  --brand-white: #FFFFFF;
+  --neon-glow: rgba(120, 27, 104, 0.22);
+  --neon-border: rgba(120, 27, 104, 0.35);
+  --neon-gold: rgba(230, 174, 82, 0.2);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: #1A1216;
+  background-color: var(--brand-cream);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 3D Premium Card + Subtle Purple Soft Neon Halo */
+.da-card-3d {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid rgba(120, 27, 104, 0.16);
+  box-shadow:
+    0 2px 6px rgba(49, 13, 43, 0.05),
+    0 12px 28px -12px rgba(49, 13, 43, 0.14),
+    0 0 18px -6px rgba(120, 27, 104, 0.12);
+  transition:
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.da-card-3d::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(120, 27, 104, 0.28) 0%,
+    rgba(230, 174, 82, 0.18) 50%,
+    rgba(49, 13, 43, 0.22) 100%
+  );
+  opacity: 0.25;
+  transition: opacity 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+}
+
+@media (hover: hover) {
+  .da-card-3d-interactive:hover {
+    transform: translateY(-5px);
+    border-color: var(--neon-border);
+    box-shadow:
+      0 6px 14px rgba(49, 13, 43, 0.08),
+      0 22px 40px -14px rgba(49, 13, 43, 0.22),
+      0 0 28px -4px var(--neon-glow),
+      0 0 18px -6px var(--neon-gold);
+  }
+
+  .da-card-3d-interactive:hover::after {
+    opacity: 0.9;
+  }
+}
+
+.da-card-3d-interactive:active {
+  transform: scale(0.985);
+}
+
+/* Admin surface card with disciplined soft purple outline */
+.da-admin-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(120, 27, 104, 0.14);
+  box-shadow:
+    0 2px 6px rgba(49, 13, 43, 0.04),
+    0 10px 24px -14px rgba(49, 13, 43, 0.14),
+    0 0 16px -8px rgba(120, 27, 104, 0.14);
+  transition:
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.da-admin-card:hover {
+  border-color: rgba(120, 27, 104, 0.28);
+  box-shadow:
+    0 4px 12px rgba(49, 13, 43, 0.06),
+    0 14px 30px -14px rgba(49, 13, 43, 0.18),
+    0 0 22px -6px rgba(120, 27, 104, 0.18);
+}
+
+/* Tactile 3D Buttons */
+.da-btn-3d {
+  background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 55%, var(--brand-deep) 100%);
+  color: #FFFFFF;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 6px 16px -6px rgba(74, 18, 63, 0.55),
+    0 0 14px -4px rgba(120, 27, 104, 0.28);
+  transition:
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 160ms ease;
+}
+
+.da-btn-3d:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 10px 22px -6px rgba(74, 18, 63, 0.6),
+    0 0 20px -2px rgba(120, 27, 104, 0.34);
+}
+
+.da-btn-3d:active:not(:disabled) {
+  transform: translateY(1px) scale(0.985);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.22),
+    0 2px 8px -3px rgba(74, 18, 63, 0.45);
+}
+
+.da-btn-gold {
+  background: linear-gradient(135deg, #F2C370 0%, #E6AE52 55%, #D3922A 100%);
+  color: #310D2B;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 8px 20px -6px rgba(230, 174, 82, 0.55),
+    0 0 18px -4px rgba(230, 174, 82, 0.35);
+  transition:
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 160ms ease;
+}
+
+.da-btn-gold:hover:not(:disabled) {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 12px 26px -6px rgba(230, 174, 82, 0.65),
+    0 0 22px -2px rgba(230, 174, 82, 0.45);
+}
+
+.da-btn-gold:active:not(:disabled) {
+  transform: translateY(1px) scale(0.985);
+}
+
+/* Gentle compositor-only floating ambient motion */
+@keyframes daFloatSlow {
+  0%,
+  100% {
+    transform: translate3d(0, 0px, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+.da-float-slow {
+  animation: daFloatSlow 5.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Horizontal scrollbar polish for mobile categories */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .da-card-3d,
+  .da-btn-3d,
+  .da-btn-gold,
+  .da-admin-card {
+    transition: none !important;
+  }
+  .da-card-3d-interactive:hover,
+  .da-btn-3d:hover,
+  .da-btn-gold:hover {
+    transform: none !important;
+  }
+  .da-float-slow {
+    animation: none !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+}

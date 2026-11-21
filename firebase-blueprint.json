@@ -1,0 +1,396 @@
+{
+  "entities": {
+    "Admin": {
+      "title": "Admin",
+      "description": "Authorized store administrator profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 160 },
+        "name": { "type": "string", "maxLength": 120 },
+        "role": { "type": "string", "enum": ["owner", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "name", "role", "createdAt"]
+    },
+    "CustomerProfile": {
+      "title": "CustomerProfile",
+      "description": "Registered customer account profile linked to Firebase Auth UID",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 120 },
+        "email": { "type": "string", "maxLength": 160 },
+        "photoUrl": { "type": "string", "maxLength": 500 },
+        "role": { "type": "string", "enum": ["customer"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "email", "role", "createdAt", "updatedAt"]
+    },
+    "StoreSettings": {
+      "title": "StoreSettings",
+      "description": "Publicly readable store branding, hours, delivery and payment configuration",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 600 },
+        "logoUrl": { "type": "string", "maxLength": 500 },
+        "faviconUrl": { "type": "string", "maxLength": 500 },
+        "bannerUrl": { "type": "string", "maxLength": 500 },
+        "promoBannerTitle": { "type": "string", "maxLength": 160 },
+        "promoBannerSubtitle": { "type": "string", "maxLength": 240 },
+        "primaryColor": { "type": "string", "maxLength": 20, "pattern": "^#[0-9a-fA-F]{6}$" },
+        "secondaryColor": { "type": "string", "maxLength": 20, "pattern": "^#[0-9a-fA-F]{6}$" },
+        "accentColor": { "type": "string", "maxLength": 20, "pattern": "^#[0-9a-fA-F]{6}$" },
+        "phone": { "type": "string", "maxLength": 30 },
+        "whatsapp": { "type": "string", "maxLength": 30 },
+        "address": { "type": "string", "maxLength": 240 },
+        "cnpj": { "type": "string", "maxLength": 30 },
+        "openingHours": { "type": "string", "maxLength": 100 },
+        "openingDays": { "type": "string", "maxLength": 120 },
+        "isOpen": { "type": "boolean" },
+        "pauseOrders": { "type": "boolean" },
+        "closedMessage": { "type": "string", "maxLength": 240 },
+        "deliveryFeeFixed": { "type": "number" },
+        "minOrderValue": { "type": "number" },
+        "estimatedDeliveryMinutes": { "type": "number" },
+        "neighborhoodFees": { "type": "array" },
+        "pickupEnabled": { "type": "boolean" },
+        "deliveryEnabled": { "type": "boolean" },
+        "pixEnabled": { "type": "boolean" },
+        "cashEnabled": { "type": "boolean" },
+        "cardEnabled": { "type": "boolean" },
+        "pixKey": { "type": "string", "maxLength": 140 },
+        "pixReceiverName": { "type": "string", "maxLength": 120 },
+        "requireReviewModeration": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "storeName", "description", "logoUrl", "bannerUrl", "primaryColor",
+        "secondaryColor", "accentColor", "phone", "whatsapp", "address",
+        "openingHours", "openingDays", "isOpen", "pauseOrders", "deliveryFeeFixed",
+        "minOrderValue", "estimatedDeliveryMinutes", "neighborhoodFees",
+        "pickupEnabled", "deliveryEnabled", "pixEnabled", "cashEnabled", "cardEnabled",
+        "updatedAt"
+      ]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product catalog category",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 80 },
+        "slug": { "type": "string", "maxLength": 80, "pattern": "^[a-z0-9-]+$" },
+        "description": { "type": "string", "maxLength": 240 },
+        "sortOrder": { "type": "number" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "sortOrder", "active", "createdAt", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Açaí, sorvete, combo or dessert product",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 600 },
+        "categoryId": { "type": "string", "maxLength": 128 },
+        "categoryName": { "type": "string", "maxLength": 80 },
+        "price": { "type": "number" },
+        "promoPrice": { "type": "number" },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "available": { "type": "boolean" },
+        "archived": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "bestSeller": { "type": "boolean" },
+        "isNew": { "type": "boolean" },
+        "allowAddons": { "type": "boolean" },
+        "sizes": { "type": "array" },
+        "bases": { "type": "array" },
+        "ratingAvg": { "type": "number" },
+        "ratingCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "name", "description", "categoryId", "categoryName", "price",
+        "imageUrl", "available", "archived", "featured", "bestSeller",
+        "isNew", "allowAddons", "sizes", "bases", "ratingAvg", "ratingCount",
+        "createdAt", "updatedAt"
+      ]
+    },
+    "Addon": {
+      "title": "Addon",
+      "description": "Customizable topping or complement for açaí and ice cream",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 80 },
+        "group": { "type": "string", "enum": ["cremes", "frutas", "caldas", "crocantes", "especiais"] },
+        "price": { "type": "number" },
+        "available": { "type": "boolean" },
+        "maxQty": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "group", "price", "available", "maxQty", "createdAt", "updatedAt"]
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Promotional discount coupon",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "maxLength": 40, "pattern": "^[A-Z0-9_-]+$" },
+        "type": { "type": "string", "enum": ["percent", "fixed"] },
+        "value": { "type": "number" },
+        "minOrderValue": { "type": "number" },
+        "firstOrderOnly": { "type": "boolean" },
+        "maxUses": { "type": "number" },
+        "usedCount": { "type": "number" },
+        "expiresAt": { "type": "string", "maxLength": 40 },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["code", "type", "value", "minOrderValue", "firstOrderOnly", "maxUses", "usedCount", "active", "createdAt", "updatedAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order with full delivery details and server-calculated totals",
+      "type": "object",
+      "properties": {
+        "orderNumber": { "type": "string", "maxLength": 30 },
+        "trackingId": { "type": "string", "maxLength": 128 },
+        "customerUid": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 120 },
+        "customerPhone": { "type": "string", "maxLength": 30 },
+        "modality": { "type": "string", "enum": ["delivery", "pickup"] },
+        "cep": { "type": "string", "maxLength": 16 },
+        "address": { "type": "string", "maxLength": 200 },
+        "number": { "type": "string", "maxLength": 30 },
+        "complement": { "type": "string", "maxLength": 120 },
+        "neighborhood": { "type": "string", "maxLength": 100 },
+        "reference": { "type": "string", "maxLength": 160 },
+        "paymentMethod": { "type": "string", "enum": ["pix", "cash", "card"] },
+        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "failed", "refunded"] },
+        "changeFor": { "type": "number" },
+        "status": {
+          "type": "string",
+          "enum": ["received", "confirmed", "preparing", "ready", "out_for_delivery", "completed", "cancelled"]
+        },
+        "cancelReason": { "type": "string", "maxLength": 300 },
+        "couponCode": { "type": "string", "maxLength": 40 },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "deliveryFee": { "type": "number" },
+        "paymentFee": { "type": "number" },
+        "total": { "type": "number" },
+        "items": { "type": "array" },
+        "notes": { "type": "string", "maxLength": 400 },
+        "priceDigest": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "orderNumber", "trackingId", "customerName", "customerPhone", "modality",
+        "paymentMethod", "paymentStatus", "status", "subtotal", "discount",
+        "deliveryFee", "paymentFee", "total", "items", "createdAt", "updatedAt"
+      ]
+    },
+    "OrderTracking": {
+      "title": "OrderTracking",
+      "description": "Publicly trackable non-PII order progress token view",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string", "maxLength": 128 },
+        "orderNumber": { "type": "string", "maxLength": 30 },
+        "modality": { "type": "string", "enum": ["delivery", "pickup"] },
+        "status": {
+          "type": "string",
+          "enum": ["received", "confirmed", "preparing", "ready", "out_for_delivery", "completed", "cancelled"]
+        },
+        "paymentMethod": { "type": "string", "enum": ["pix", "cash", "card"] },
+        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "failed", "refunded"] },
+        "cancelReason": { "type": "string", "maxLength": 300 },
+        "total": { "type": "number" },
+        "estimatedMinutes": { "type": "number" },
+        "itemsSummary": { "type": "array" },
+        "productIds": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "orderId", "orderNumber", "modality", "status", "paymentMethod",
+        "paymentStatus", "total", "estimatedMinutes", "itemsSummary",
+        "productIds", "createdAt", "updatedAt"
+      ]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Post-purchase product star rating and comment with moderation status",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string", "maxLength": 128 },
+        "productName": { "type": "string", "maxLength": 120 },
+        "orderId": { "type": "string", "maxLength": 128 },
+        "trackingId": { "type": "string", "maxLength": 128 },
+        "customerUid": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "rating": { "type": "number" },
+        "comment": { "type": "string", "maxLength": 800 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "adminReply": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "productId", "productName", "orderId", "trackingId", "customerName",
+        "rating", "comment", "status", "adminReply", "createdAt", "updatedAt"
+      ]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Operational expense and accounts payable entry",
+      "type": "object",
+      "properties": {
+        "description": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 80 },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "maxLength": 20 },
+        "paymentMethod": { "type": "string", "enum": ["pix", "cash", "card", "transfer", "boleto"] },
+        "status": { "type": "string", "enum": ["paid", "pending"] },
+        "receiptUrl": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["description", "category", "amount", "date", "paymentMethod", "status", "createdAt", "updatedAt"]
+    },
+    "PaymentRecord": {
+      "title": "PaymentRecord",
+      "description": "Financial settlement record linked to an order",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string", "maxLength": 128 },
+        "orderNumber": { "type": "string", "maxLength": 30 },
+        "method": { "type": "string", "enum": ["pix", "cash", "card"] },
+        "amount": { "type": "number" },
+        "feeAmount": { "type": "number" },
+        "netAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "failed", "refunded"] },
+        "providerRef": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["orderId", "orderNumber", "method", "amount", "feeAmount", "netAmount", "status", "createdAt", "updatedAt"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Customer support conversation thread",
+      "type": "object",
+      "properties": {
+        "customerName": { "type": "string", "maxLength": 100 },
+        "customerPhone": { "type": "string", "maxLength": 30 },
+        "customerUid": { "type": "string", "maxLength": 128 },
+        "orderId": { "type": "string", "maxLength": 128 },
+        "orderNumber": { "type": "string", "maxLength": 30 },
+        "status": { "type": "string", "enum": ["open", "closed"] },
+        "lastMessage": { "type": "string", "maxLength": 300 },
+        "unreadAdmin": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerName", "status", "lastMessage", "unreadAdmin", "createdAt", "updatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Single message in a support conversation",
+      "type": "object",
+      "properties": {
+        "senderRole": { "type": "string", "enum": ["customer", "admin"] },
+        "senderName": { "type": "string", "maxLength": 100 },
+        "text": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderRole", "senderName", "text", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable log of administrative mutations",
+      "type": "object",
+      "properties": {
+        "actorUid": { "type": "string", "maxLength": 128 },
+        "actorEmail": { "type": "string", "maxLength": 160 },
+        "action": { "type": "string", "maxLength": 100 },
+        "targetType": { "type": "string", "maxLength": 60 },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "details": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["actorUid", "actorEmail", "action", "targetType", "targetId", "details", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Authorized store administrators"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/CustomerProfile" },
+      "description": "Registered customer profiles keyed by Firebase Auth UID"
+    },
+    "/storeSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/StoreSettings" },
+      "description": "Store branding, hours, delivery and payment configuration (doc ID: main)"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Store product categories"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Store product catalog with sizes, bases and rating summaries"
+    },
+    "/addons/{addonId}": {
+      "schema": { "$ref": "#/entities/Addon" },
+      "description": "Store addons and toppings"
+    },
+    "/coupons/{couponCode}": {
+      "schema": { "$ref": "#/entities/Coupon" },
+      "description": "Promotional discount coupons keyed by uppercase coupon code"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders containing PII, accessible only to admins or order owner"
+    },
+    "/orderTracking/{trackingId}": {
+      "schema": { "$ref": "#/entities/OrderTracking" },
+      "description": "Non-PII order status tracking view keyed by secret trackingId"
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/Review" },
+      "description": "Post-purchase product ratings and comments with moderation state"
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Operational expenses and accounts payable"
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/PaymentRecord" },
+      "description": "Confirmed payment settlements and gateway fee records"
+    },
+    "/conversations/{conversationId}": {
+      "schema": { "$ref": "#/entities/Conversation" },
+      "description": "Customer support threads"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Messages inside a support thread"
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Immutable audit log of admin operations"
+    }
+  }
+}
