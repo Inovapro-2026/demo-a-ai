@@ -23,7 +23,7 @@
 - `PIX_WEBHOOK_SECRET`: Segredo HMAC para validar webhooks reais de provedores Pix em `/api/webhooks/pix`.
 
 ## Como Usar
-- **Acessar o Painel Administrativo:** Acesse `/admin` (ou clique em "Painel Administrativo" no rodapé da loja) e entre com a conta Google autorizada (`maiconsillva2025@gmail.com`). No primeiro acesso, o catálogo inicial da Dois Amores é carregado automaticamente no Firestore caso ainda esteja vazio.
+- **Acessar o Painel Administrativo:** Acesse `/admin` (ou clique em "Painel Administrativo" no rodapé da loja) e entre com o e-mail e senha administrativos configurados no Firebase Authentication (`inovaprotech@gmail.com`). No primeiro acesso, o catálogo inicial da Dois Amores é carregado automaticamente no Firestore caso ainda esteja vazio.
 - **Cadastrar Produtos e Fotos:** No menu **Produtos**, clique em **Novo Produto**, envie uma foto (salva em armazenamento persistente `/uploads`) e defina preços, promoção, tamanhos e disponibilidade.
 - **Administrar Pedidos:** Em **Pedidos**, acompanhe novos pedidos com alerta sonoro e visual em tempo real, avance os status (`Confirmar`, `Em preparação`, `Pronto p/ retirada` ou `Saiu p/ entrega`, `Concluir`), confirme pagamentos, imprima comandas ou cancele com justificativa.
 - **Moderar Avaliações:** Após finalizar um pedido, o cliente pode avaliar cada produto na tela de acompanhamento. Em **Avaliações**, aprove para exibição na loja pública, responda ou oculte comentários.

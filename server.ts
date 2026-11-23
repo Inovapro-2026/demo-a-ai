@@ -32,7 +32,7 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 const ORDER_SIGNING_SECRET =
   process.env.ORDER_SIGNING_SECRET || crypto.randomBytes(32).toString('hex');
 
-const BOOTSTRAP_ADMIN_EMAIL = 'maiconsillva2025@gmail.com';
+const BOOTSTRAP_ADMIN_EMAILS = ['maiconsillva2025@gmail.com', 'inovaprotech@gmail.com'];
 
 // Firebase Admin SDK (used strictly for verifyIdToken, no IAM needed)
 if (!getApps().length) {
@@ -64,8 +64,11 @@ async function requireAdminAuth(req: AuthedRequest, res: Response, next: NextFun
       .map((s) => s.trim().toLowerCase())
       .filter(Boolean);
     const email = (decoded.email || '').toLowerCase();
-    const isAllowedEmail = email === BOOTSTRAP_ADMIN_EMAIL || allowedExtra.includes(email);
-    if (!decoded.email_verified || !isAllowedEmail) {
+    const isPasswordAdmin =
+      email === 'inovaprotech@gmail.com' && decoded.firebase?.sign_in_provider === 'password';
+    const isAllowedEmail =
+      BOOTSTRAP_ADMIN_EMAILS.includes(email) || allowedExtra.includes(email);
+    if ((!decoded.email_verified && !isPasswordAdmin) || !isAllowedEmail) {
       res.status(403).json({ error: 'Acesso restrito ao administrador autorizado.' });
       return;
     }
@@ -120,6 +123,21 @@ async function startServer() {
   // Health check
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', service: 'dois-amores-platform' });
+  });
+
+  // Optional demo credentials hint for /admin login screen (only active when DEMO_ADMIN_PASSWORD is set)
+  app.get('/api/admin/demo-hint', (_req, res) => {
+    const demoPassword = (process.env.DEMO_ADMIN_PASSWORD || '').trim();
+    const demoEmail = (process.env.DEMO_ADMIN_EMAIL || 'inovaprotech@gmail.com').trim();
+    if (!demoPassword) {
+      res.json({ enabled: false, email: demoEmail });
+      return;
+    }
+    res.json({
+      enabled: true,
+      email: demoEmail,
+      password: demoPassword,
+    });
   });
 
   // Protected image upload endpoint (Admin only)
@@ -457,7 +475,7 @@ async function startServer() {
 
   if (!IS_PROD) {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false, ws: false },
       appType: 'spa',
     });
     app.use(vite.middlewares);

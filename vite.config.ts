@@ -111,6 +111,29 @@ export default defineConfig(() => {
           }
         },
       },
+      {
+        name: 'disable-hmr-websocket-in-client',
+        apply: 'serve' as const,
+        enforce: 'post' as const,
+        transform(code: string, id: string) {
+          if (id.replace(/\\/g, '/').endsWith('/vite/dist/client/client.mjs')) {
+            const patched = code
+              .replace(
+                /const transport = normalizeModuleRunnerTransport\(\(\(\) => \{[\s\S]*?\}\)\(\)\);/,
+                'const transport = normalizeModuleRunnerTransport({ async invoke() { return { result: undefined }; }, async send() {} });',
+              )
+              .replace(
+                'transport.connect(createHMRHandler(handleMessage));',
+                '/* HMR WebSocket disabled */',
+              );
+            return {
+              code: patched,
+              map: null,
+            };
+          }
+          return null;
+        },
+      },
     ],
     resolve: {
       alias: {
@@ -118,8 +141,9 @@ export default defineConfig(() => {
       },
     },
     server: {
-      hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      hmr: false as const,
+      ws: false as const,
+      watch: null,
     },
   };
 });

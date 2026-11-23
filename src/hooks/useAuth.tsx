@@ -1,9 +1,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
+import {
+  onAuthStateChanged,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  User,
+} from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db, googleAuthProvider, handleFirestoreError, OperationType } from '../lib/firebase.ts';
 
-const OWNER_EMAIL = 'maiconsillva2025@gmail.com';
+const ADMIN_EMAILS = ['maiconsillva2025@gmail.com', 'inovaprotech@gmail.com'];
 
 interface AuthContextValue {
   user: User | null;
@@ -11,11 +19,40 @@ interface AuthContextValue {
   isAdmin: boolean;
   authError: string | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmailPassword: (email: string, password: string) => Promise<boolean>;
+  sendVerificationEmail: () => Promise<boolean>;
+  sendPasswordReset: (email: string) => Promise<boolean>;
+  refreshAuthUser: () => Promise<void>;
   logout: () => Promise<void>;
   getIdToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function mapFirebaseAuthError(error: unknown): string {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String((error as { code?: unknown }).code || '')
+      : '';
+
+  if (code === 'auth/operation-not-allowed') {
+    return 'O provedor E-mail/Senha ainda não está ativado no Firebase Console (Authentication → Sign-in method).';
+  }
+  if (
+    code === 'auth/invalid-credential' ||
+    code === 'auth/wrong-password' ||
+    code === 'auth/user-not-found'
+  ) {
+    return 'E-mail ou senha inválidos, ou usuário ainda não cadastrado no Firebase Authentication.';
+  }
+  if (code === 'auth/invalid-email') {
+    return 'Informe um endereço de e-mail válido.';
+  }
+  if (code === 'auth/too-many-requests') {
+    return 'Muitas tentativas seguidas. Aguarde alguns instantes e tente novamente.';
+  }
+  return error instanceof Error ? error.message : 'Não foi possível concluir a autenticação.';
+}
 
 async function syncCustomerProfile(currentUser: User): Promise<void> {
   if (!currentUser.emailVerified || !currentUser.email) return;
@@ -71,11 +108,31 @@ async function syncCustomerProfile(currentUser: User): Promise<void> {
   }
 }
 
+async function resolveIsAdmin(currentUser: User): Promise<boolean> {
+  const email = (currentUser.email || '').toLowerCase();
+  const hasPasswordProvider = currentUser.providerData.some(
+    (p) => p.providerId === 'password'
+  );
+  if (email === 'inovaprotech@gmail.com' && hasPasswordProvider) {
+    return true;
+  }
+  if (!currentUser.emailVerified) return false;
+  if (ADMIN_EMAILS.includes(email)) return true;
+
+  try {
+    const adminDoc = await getDoc(doc(db, 'admins', currentUser.uid));
+    return adminDoc.exists();
+  } catch {
+    return false;
+  }
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [, setRefreshTick] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -88,21 +145,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       void syncCustomerProfile(currentUser);
-
-      if (currentUser.emailVerified && currentUser.email?.toLowerCase() === OWNER_EMAIL) {
-        setIsAdmin(true);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const adminDoc = await getDoc(doc(db, 'admins', currentUser.uid));
-        setIsAdmin(adminDoc.exists() && currentUser.emailVerified);
-      } catch {
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
-      }
+      const adminStatus = await resolveIsAdmin(currentUser);
+      setIsAdmin(adminStatus);
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -113,12 +158,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signInWithPopup(auth, googleAuthProvider);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Não foi possível concluir o login.';
-      setAuthError(msg);
+      setAuthError(mapFirebaseAuthError(error));
+    }
+  };
+
+  const signInWithEmailPassword = async (email: string, password: string): Promise<boolean> => {
+    setAuthError(null);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const adminStatus = await resolveIsAdmin(cred.user);
+      setUser(cred.user);
+      setIsAdmin(adminStatus);
+      setRefreshTick((t) => t + 1);
+      return true;
+    } catch (error) {
+      setAuthError(mapFirebaseAuthError(error));
+      return false;
+    }
+  };
+
+  const sendVerificationEmail = async (): Promise<boolean> => {
+    if (!auth.currentUser) return false;
+    setAuthError(null);
+    try {
+      await sendEmailVerification(auth.currentUser);
+      return true;
+    } catch (error) {
+      setAuthError(mapFirebaseAuthError(error));
+      return false;
+    }
+  };
+
+  const sendPasswordReset = async (email: string): Promise<boolean> => {
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setAuthError('Informe o e-mail administrativo para redefinir a senha.');
+      return false;
+    }
+    setAuthError(null);
+    try {
+      await sendPasswordResetEmail(auth, cleanEmail);
+      return true;
+    } catch (error) {
+      setAuthError(mapFirebaseAuthError(error));
+      return false;
+    }
+  };
+
+  const refreshAuthUser = async () => {
+    if (!auth.currentUser) return;
+    setAuthError(null);
+    try {
+      await auth.currentUser.reload();
+      await auth.currentUser.getIdToken(true);
+      const refreshed = auth.currentUser;
+      setUser(refreshed);
+      const adminStatus = await resolveIsAdmin(refreshed);
+      setIsAdmin(adminStatus);
+      if (refreshed.emailVerified) {
+        void syncCustomerProfile(refreshed);
+      }
+      setRefreshTick((t) => t + 1);
+    } catch (error) {
+      setAuthError(mapFirebaseAuthError(error));
     }
   };
 
   const logout = async () => {
+    setAuthError(null);
     await signOut(auth);
   };
 
@@ -135,6 +242,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAdmin,
         authError,
         signInWithGoogle,
+        signInWithEmailPassword,
+        sendVerificationEmail,
+        sendPasswordReset,
+        refreshAuthUser,
         logout,
         getIdToken,
       }}

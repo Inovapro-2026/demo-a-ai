@@ -5,11 +5,15 @@ import {
   BarChart3,
   ClipboardList,
   CreditCard,
+  ExternalLink,
+  Eye,
+  EyeOff,
   FolderTree,
   IceCream,
   LayoutDashboard,
   Lock,
   LogOut,
+  Mail,
   Menu,
   MessageSquare,
   PlusCircle,
@@ -31,7 +35,7 @@ import type {
 import { useAuth } from '../../hooks/useAuth.tsx';
 import { useStoreData } from '../../hooks/useStoreData.tsx';
 import { playNewOrderChime } from '../../lib/adminHelpers.ts';
-import { db, handleFirestoreError, OperationType } from '../../lib/firebase.ts';
+import { db, FIREBASE_PROJECT_ID, handleFirestoreError, OperationType } from '../../lib/firebase.ts';
 import { AdminAddons } from './AdminAddons.tsx';
 import { AdminCategories } from './AdminCategories.tsx';
 import { AdminChat } from './AdminChat.tsx';
@@ -66,9 +70,52 @@ interface AdminPanelProps {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToStore }) => {
-  const { user, loading: authLoading, isAdmin, authError, signInWithGoogle, logout } = useAuth();
+  const {
+    user,
+    loading: authLoading,
+    isAdmin,
+    authError,
+    signInWithEmailPassword,
+    sendPasswordReset,
+    logout,
+  } = useAuth();
   const { settings, categories, products, addons, isUsingStarterCatalog, seedCatalogIfEmpty } =
     useStoreData();
+
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [submittingLogin, setSubmittingLogin] = useState(false);
+  const [resetSentEmail, setResetSentEmail] = useState<string | null>(null);
+  const [demoHint, setDemoHint] = useState<{
+    enabled: boolean;
+    email: string;
+    password?: string;
+  }>({
+    enabled: false,
+    email: 'inovaprotech@gmail.com',
+  });
+
+  useEffect(() => {
+    if (user && isAdmin) return;
+    let cancelled = false;
+    fetch('/api/admin/demo-hint')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { enabled?: boolean; email?: string; password?: string } | null) => {
+        if (cancelled || !data) return;
+        setDemoHint({
+          enabled: Boolean(data.enabled && data.password),
+          email: data.email || 'inovaprotech@gmail.com',
+          password: data.password,
+        });
+      })
+      .catch(() => {
+        // Keep default email hint when offline
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isAdmin]);
 
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -171,6 +218,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToStore }) => {
     );
   }
 
+  const handleAdminEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmail.trim() || !loginPassword || submittingLogin) return;
+    setSubmittingLogin(true);
+    try {
+      await signInWithEmailPassword(loginEmail, loginPassword);
+    } finally {
+      setSubmittingLogin(false);
+    }
+  };
+
   // Protected Admin Gate
   if (!user || !isAdmin) {
     return (
@@ -205,26 +263,157 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToStore }) => {
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <form onSubmit={(e) => void handleAdminEmailLogin(e)} className="space-y-4">
               <p className="text-sm text-[#43353C] leading-relaxed">
-                Entre com a conta Google autorizada do proprietário para gerenciar pedidos, catálogo, financeiro, avaliações e configurações.
+                Entre com seu e-mail e senha administrativos para gerenciar pedidos, catálogo, financeiro, avaliações e configurações.
               </p>
 
+              <div>
+                <label htmlFor="admin-login-email" className="block text-xs font-bold text-[#310D2B]">
+                  E-mail administrativo
+                </label>
+                <div className="relative mt-1.5">
+                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#781B68]" />
+                  <input
+                    id="admin-login-email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="seuemail@dominio.com"
+                    className="w-full rounded-2xl border border-[#781B68]/20 bg-[#FFF5EB]/35 py-2.5 pl-10 pr-3.5 text-sm text-[#1A1216] placeholder:text-[#6D5A63] focus:border-[#781B68] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor="admin-login-password" className="block text-xs font-bold text-[#310D2B]">
+                    Senha
+                  </label>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const targetEmail = loginEmail.trim() || demoHint.email;
+                      setLoginEmail(targetEmail);
+                      setResetSentEmail(null);
+                      const ok = await sendPasswordReset(targetEmail);
+                      if (ok) setResetSentEmail(targetEmail);
+                    }}
+                    className="text-[11px] font-semibold text-[#781B68] hover:underline cursor-pointer"
+                  >
+                    Redefinir senha por e-mail
+                  </button>
+                </div>
+                <div className="relative mt-1.5">
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#781B68]" />
+                  <input
+                    id="admin-login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="current-password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Digite sua senha"
+                    className="w-full rounded-2xl border border-[#781B68]/20 bg-[#FFF5EB]/35 py-2.5 pl-10 pr-10 text-sm text-[#1A1216] placeholder:text-[#6D5A63] focus:border-[#781B68] focus:bg-white focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5C4952] hover:text-[#4A123F] cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {resetSentEmail && (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                  Link de redefinição de senha enviado para <strong>{resetSentEmail}</strong>.
+                </div>
+              )}
+
               {authError && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
-                  {authError}
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-900 space-y-2">
+                  <p className="font-semibold">{authError}</p>
+                  {authError.includes('Sign-in method') && (
+                    <div className="space-y-1.5 border-t border-red-200/80 pt-2 text-[11px] leading-relaxed text-red-800">
+                      <p>
+                        No Firebase Console do projeto <strong>{FIREBASE_PROJECT_ID}</strong>, ative{' '}
+                        <strong>E-mail/senha</strong> em <em>Authentication → Sign-in method</em> e crie o usuário{' '}
+                        <strong>{demoHint.email}</strong> em <em>Users</em>.
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-0.5">
+                        <a
+                          href={`https://console.firebase.google.com/project/${encodeURIComponent(FIREBASE_PROJECT_ID)}/authentication/providers`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg bg-red-700 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-red-800"
+                        >
+                          Ativar E-mail/Senha <ExternalLink className="h-3 w-3" />
+                        </a>
+                        <a
+                          href={`https://console.firebase.google.com/project/${encodeURIComponent(FIREBASE_PROJECT_ID)}/authentication/users`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg border border-red-300 bg-white px-2.5 py-1 text-[11px] font-bold text-red-800 hover:bg-red-100"
+                        >
+                          Gerenciar Usuários <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
               <button
-                type="button"
-                onClick={() => void signInWithGoogle()}
-                className="da-btn-3d w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold cursor-pointer"
+                type="submit"
+                disabled={submittingLogin}
+                className="da-btn-3d w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold disabled:opacity-60 cursor-pointer"
               >
                 <Lock className="h-4 w-4 text-[#E6AE52]" />
-                Entrar com Google
+                {submittingLogin ? 'Entrando...' : 'Entrar no Painel'}
               </button>
-            </div>
+
+              <div className="rounded-2xl border border-[#781B68]/20 bg-[#FFF5EB]/70 p-3.5 text-xs text-[#310D2B] space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold uppercase tracking-wider text-[11px] text-[#781B68]">
+                    Acesso Demo
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginEmail(demoHint.email);
+                      if (demoHint.enabled && demoHint.password) {
+                        setLoginPassword(demoHint.password);
+                      }
+                    }}
+                    className="rounded-lg border border-[#781B68]/25 bg-white px-2.5 py-1 text-[11px] font-bold text-[#4A123F] hover:bg-[#781B68]/10 cursor-pointer"
+                  >
+                    {demoHint.enabled && demoHint.password ? 'Preencher demo' : 'Preencher e-mail'}
+                  </button>
+                </div>
+
+                <div className="space-y-1 font-mono-tabular text-[12px]">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="font-semibold text-[#5C4952]">E-mail:</span>
+                    <span className="font-bold text-[#310D2B] select-all">{demoHint.email}</span>
+                  </div>
+                  {demoHint.enabled && demoHint.password ? (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-semibold text-[#5C4952]">Senha:</span>
+                      <span className="font-bold text-[#310D2B] select-all">{demoHint.password}</span>
+                    </div>
+                  ) : (
+                    <p className="font-sans text-[11px] leading-relaxed text-[#5C4952]">
+                      Utilize a senha administrativa definida no Firebase Authentication (ou configure a exibição da senha demo nas variáveis de ambiente).
+                    </p>
+                  )}
+                </div>
+              </div>
+            </form>
           )}
 
           <button

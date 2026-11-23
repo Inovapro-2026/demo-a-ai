@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag } from 'lucide-react';
+import { Lock, ShoppingBag } from 'lucide-react';
 import type { StoreSettings } from '../../types/domain.ts';
 
 interface StoreHeaderProps {
@@ -9,6 +9,7 @@ interface StoreHeaderProps {
   onNavigateSection: (sectionId: string) => void;
   onOpenCatalog: () => void;
   onOpenTracking: () => void;
+  onOpenAdmin: () => void;
 }
 
 export const StoreHeader: React.FC<StoreHeaderProps> = ({
@@ -18,10 +19,11 @@ export const StoreHeader: React.FC<StoreHeaderProps> = ({
   onNavigateSection,
   onOpenCatalog,
   onOpenTracking,
+  onOpenAdmin,
 }) => {
   return (
     <header className="sticky top-0 z-40 border-b border-[#781B68]/12 bg-white/92 backdrop-blur-md">
-      <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between gap-4 sm:gap-8 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between gap-2 sm:gap-8 px-3 sm:px-6 lg:px-8">
         {/* Zone 1: Single-line Brand Wordmark */}
         <a
           href="/"
@@ -29,15 +31,15 @@ export const StoreHeader: React.FC<StoreHeaderProps> = ({
             e.preventDefault();
             onNavigateSection('topo');
           }}
-          className="flex items-center gap-2.5 whitespace-nowrap shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]"
+          className="flex min-w-0 items-center gap-2 sm:gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]"
         >
           <img
             src={settings.logoUrl || '/assets/aistudio/image_332d0e8c.png'}
             alt={settings.storeName}
             referrerPolicy="no-referrer"
-            className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover ring-2 ring-[#781B68]/25 bg-white shadow-sm"
+            className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full object-cover ring-2 ring-[#781B68]/25 bg-white shadow-sm"
           />
-          <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-[#310D2B] whitespace-nowrap shrink-0">
+          <span className="font-display text-base sm:text-xl font-bold tracking-tight text-[#310D2B] truncate">
             {settings.storeName}
           </span>
         </a>
@@ -83,12 +85,12 @@ export const StoreHeader: React.FC<StoreHeaderProps> = ({
           </button>
         </nav>
 
-        {/* Zone 3: 1 Primary 3D CTA */}
-        <div className="flex items-center shrink-0">
+        {/* Zone 3: Sacola CTA & Admin Access */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={onOpenCart}
-            className="da-btn-3d inline-flex min-h-[40px] items-center gap-2 sm:gap-2.5 rounded-xl px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 cursor-pointer"
+            className="da-btn-3d inline-flex min-h-[40px] items-center gap-1.5 sm:gap-2.5 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 cursor-pointer"
             aria-label={`Abrir sacola com ${cartCount} itens`}
           >
             <ShoppingBag className="h-4 w-4" />
@@ -96,6 +98,16 @@ export const StoreHeader: React.FC<StoreHeaderProps> = ({
             <span className="font-mono-tabular rounded-lg bg-[#E6AE52] px-1.5 py-0.5 text-xs font-bold text-[#310D2B]">
               {cartCount}
             </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenAdmin}
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-[#781B68]/25 bg-[#FFF5EB] px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#4A123F] shadow-sm transition hover:border-[#781B68]/50 hover:bg-[#781B68]/10 active:scale-[0.98] whitespace-nowrap shrink-0 cursor-pointer"
+            aria-label="Abrir painel administrativo"
+          >
+            <Lock className="h-3.5 w-3.5 text-[#781B68]" />
+            <span>Admin</span>
           </button>
         </div>
       </div>

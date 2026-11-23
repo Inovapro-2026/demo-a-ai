@@ -28,9 +28,15 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isVerifiedUser() && (
+      return (isVerifiedUser() && (
         request.auth.token.email == 'maiconsillva2025@gmail.com' ||
+        request.auth.token.email == 'inovaprotech@gmail.com' ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      )) || (
+        isSignedIn() &&
+        request.auth.token.email == 'inovaprotech@gmail.com' &&
+        'firebase' in request.auth.token &&
+        request.auth.token.firebase.sign_in_provider == 'password'
       );
     }
 

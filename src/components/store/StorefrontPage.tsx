@@ -350,6 +350,7 @@ export const StorefrontPage: React.FC<StorefrontPageProps> = ({
         onNavigateSection={handleNavigateSection}
         onOpenCatalog={() => handleOpenCatalogPage('all')}
         onOpenTracking={handleOpenTracking}
+        onOpenAdmin={onOpenAdmin}
       />
 
       {viewMode === 'tracking' ? (
