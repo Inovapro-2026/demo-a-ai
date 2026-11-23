@@ -50,6 +50,10 @@ export async function uploadAdminImage(file: File, getIdToken: () => Promise<str
     }),
   });
 
+  const ct = resp.headers.get('content-type') || '';
+  if (!ct.includes('application/json')) {
+    throw new Error('O envio de imagens requer o servidor ativo (ou informe a URL da imagem).');
+  }
   const payload = (await resp.json()) as { url?: string; error?: string };
   if (!resp.ok || !payload.url) {
     throw new Error(payload.error || 'Erro ao enviar imagem.');

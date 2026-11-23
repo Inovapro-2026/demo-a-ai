@@ -433,7 +433,16 @@ service cloud.firestore {
       allow create: if isValidId(orderId) &&
         isValidOrder(incoming()) &&
         incoming().status == 'received' &&
-        incoming().paymentStatus == 'pending' &&
+        (
+          incoming().paymentStatus == 'pending' ||
+          (
+            incoming().paymentStatus == 'paid' &&
+            incoming().paymentMethod in ['pix', 'card', 'cash'] &&
+            'priceDigest' in incoming() &&
+            incoming().priceDigest is string &&
+            incoming().priceDigest.size() >= 16
+          )
+        ) &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         (!('customerUid' in incoming()) || incoming().customerUid == null || (isVerifiedUser() && incoming().customerUid == request.auth.uid));
@@ -455,10 +464,11 @@ service cloud.firestore {
         trackingId.size() >= 20 &&
         isValidOrderTracking(incoming()) &&
         incoming().status == 'received' &&
-        incoming().paymentStatus == 'pending' &&
+        incoming().paymentStatus in ['pending', 'paid'] &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
-        existsAfter(/databases/$(database)/documents/orders/$(incoming().orderId));
+        existsAfter(/databases/$(database)/documents/orders/$(incoming().orderId)) &&
+        incoming().paymentStatus == getAfter(/databases/$(database)/documents/orders/$(incoming().orderId)).data.paymentStatus;
       allow update: if isAdmin() &&
         isValidId(trackingId) &&
         isValidOrderTracking(incoming()) &&
@@ -512,7 +522,26 @@ service cloud.firestore {
 
     match /payments/{paymentId} {
       allow get, list: if isAdmin();
-      allow create: if isAdmin() && isValidId(paymentId) && isValidPaymentRecord(incoming()) && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow create: if (
+        isAdmin() &&
+        isValidId(paymentId) &&
+        isValidPaymentRecord(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time
+      ) || (
+        isValidId(paymentId) &&
+        isValidPaymentRecord(incoming()) &&
+        paymentId == 'pay_' + incoming().orderId &&
+        incoming().status == 'confirmed' &&
+        incoming().method in ['pix', 'card', 'cash'] &&
+        incoming().providerRef is string &&
+        incoming().providerRef.matches('^Simulador Demo \\((Pix|Cartão|Dinheiro)\\) · SIM-[A-Za-z0-9]+$') &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/orders/$(incoming().orderId)) &&
+        getAfter(/databases/$(database)/documents/orders/$(incoming().orderId)).data.paymentStatus == 'paid' &&
+        getAfter(/databases/$(database)/documents/orders/$(incoming().orderId)).data.total == incoming().amount
+      );
       allow update: if isAdmin() && isValidId(paymentId) && isValidPaymentRecord(incoming()) && incoming().orderId == existing().orderId && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
       allow delete: if false;
     }

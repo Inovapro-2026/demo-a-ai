@@ -449,6 +449,86 @@ async function startServer() {
     }
   });
 
+  // Demo Payment Simulator (verifies order digest and computes fees/transaction ref)
+  app.post('/api/payments/simulate', (req, res) => {
+    try {
+      const {
+        orderId,
+        paymentMethod,
+        subtotal,
+        discount,
+        deliveryFee,
+        total,
+        priceDigest,
+        outcome,
+      } = req.body as {
+        orderId?: string;
+        paymentMethod?: 'pix' | 'cash' | 'card';
+        subtotal?: number;
+        discount?: number;
+        deliveryFee?: number;
+        total?: number;
+        priceDigest?: string;
+        outcome?: 'approved' | 'declined';
+      };
+
+      if (
+        typeof orderId !== 'string' ||
+        !orderId ||
+        (paymentMethod !== 'pix' && paymentMethod !== 'cash' && paymentMethod !== 'card') ||
+        typeof total !== 'number' ||
+        total < 0
+      ) {
+        res.status(400).json({ error: 'Dados inválidos para simulação de pagamento.' });
+        return;
+      }
+
+      if (typeof priceDigest !== 'string' || priceDigest.length < 32) {
+        res.status(400).json({ error: 'Assinatura de pedido inválida.' });
+        return;
+      }
+
+      const expectedDigest = crypto
+        .createHmac('sha256', ORDER_SIGNING_SECRET)
+        .update(JSON.stringify({ orderId, subtotal, discount, deliveryFee, total }))
+        .digest('hex');
+
+      const providedBuf = Buffer.from(priceDigest, 'utf8');
+      const expectedBuf = Buffer.from(expectedDigest, 'utf8');
+      if (providedBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(providedBuf, expectedBuf)) {
+        res.status(403).json({ error: 'Integridade do valor do pedido inválida.' });
+        return;
+      }
+
+      if (outcome === 'declined') {
+        res.status(402).json({
+          approved: false,
+          error: 'Pagamento recusado no simulador demo. Tente novamente ou escolha outra forma de pagamento.',
+        });
+        return;
+      }
+
+      const feeRate = paymentMethod === 'card' ? 0.032 : paymentMethod === 'pix' ? 0.005 : 0;
+      const feeAmount = Number((total * feeRate).toFixed(2));
+      const netAmount = Number((total - feeAmount).toFixed(2));
+      const txId = `SIM-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+      const methodLabel =
+        paymentMethod === 'pix' ? 'Pix' : paymentMethod === 'card' ? 'Cartão' : 'Dinheiro';
+      const providerRef = `Simulador Demo (${methodLabel}) · ${txId}`;
+
+      res.json({
+        approved: true,
+        txId,
+        feeAmount,
+        netAmount,
+        providerRef,
+      });
+    } catch (error) {
+      console.error('Erro ao simular pagamento:', error);
+      res.status(500).json({ error: 'Falha ao processar simulação de pagamento.' });
+    }
+  });
+
   // Real Pix Webhook handler (strictly verifies HMAC signature; never simulates confirmation)
   app.post('/api/webhooks/pix', (req, res) => {
     const secret = process.env.PIX_WEBHOOK_SECRET;

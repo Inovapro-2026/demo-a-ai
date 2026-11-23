@@ -100,8 +100,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onBackToStore }) => {
     if (user && isAdmin) return;
     let cancelled = false;
     fetch('/api/admin/demo-hint')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { enabled?: boolean; email?: string; password?: string } | null) => {
+      .then(async (res) => {
+        if (!res.ok) return null;
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) return null;
+        return (await res.json()) as { enabled?: boolean; email?: string; password?: string };
+      })
+      .then((data) => {
         if (cancelled || !data) return;
         setDemoHint({
           enabled: Boolean(data.enabled && data.password),
